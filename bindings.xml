@@ -1,0 +1,8 @@
+<Bindings>
+	<Binding name="BTRACKER_SWAP" description="Swap" header="BTRACKER">
+		bTracker:swapTracking()
+	</Binding>
+	<Binding name="BTRACKER_CLEAR" description="Clear">
+		bTracker:clearTracking()
+	</Binding>
+</Bindings>
