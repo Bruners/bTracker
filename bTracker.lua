@@ -7,6 +7,7 @@ local GetSpellCooldown = GetSpellCooldown
 local print = print
 local tostring = tostring
 local tonumber = tonumber
+local spell, casted
 local frame = CreateFrame("Frame", "bTracker", UIParent)
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 
@@ -20,13 +21,19 @@ function frame:PLAYER_ENTERING_WORLD()
 	self:makeTrackList()
 
 	self:RegisterEvent("MINIMAP_UPDATE_TRACKING")
-
+	self:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+	casted = false
 	self:UnregisterEvent("PLAYER_ENTERING_WORLD")
 	self.PLAYER_ENTERING_WORLD = nil
 end
 
 function frame:MINIMAP_UPDATE_TRACKING()
 	self:makeTrackList()
+end
+
+function frame:UNIT_SPELLCAST_SUCCEEDED(self, unit, cast, ...)
+	spell = cast
+	casted = true
 end
 
 function frame:makeTrackList()
@@ -54,8 +61,8 @@ end
 function frame:clearTracking()
 	self:trackHandler(nil,nil)
 end
-function frame:swapTracking()
-	if (GetSpellCooldown("Find Herbs") or GetSpellCooldown("Find Minerals") or GetSpellCooldown("Find Fish")) == 0 then 
+function frame:swapTracking() 
+	if casted == false or GetSpellCooldown(spell) == 0 then	
 		if bTrackerDB.cur and bTrackerDB.pre then
 			self:trackHandler(bTrackerDB.pre, true, true)
 		else
