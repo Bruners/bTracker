@@ -1,13 +1,25 @@
-﻿bTrackerDB = {}
+﻿local myname, ns = ...
+bTrackerDB = {}
 local list = {}
 local GetNumTrackingTypes = GetNumTrackingTypes
 local SetTracking = SetTracking
 local GetTrackingInfo = GetTrackingInfo
 local GetSpellCooldown = GetSpellCooldown
+local GetSpellInfo = GetSpellInfo
 local print = print
 local tostring = tostring
 local tonumber = tonumber
-local spell, casted
+local spell
+local spells = { 
+	2383,	-- Find Herbs
+	2481,	-- Find Treasure
+	2580,	-- Find Minerals
+	5503,	-- Sense Undead
+	43308,	-- Find Fish
+}
+local myfullname = GetAddOnMetadata(myname, "Title")
+local function Print(...) print("|cFF33FF99".. myfullname.. "|r -", ...) end
+
 local frame = CreateFrame("Frame", "bTracker", UIParent)
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 
@@ -21,19 +33,25 @@ function frame:PLAYER_ENTERING_WORLD()
 	self:makeTrackList()
 
 	self:RegisterEvent("MINIMAP_UPDATE_TRACKING")
-	self:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
-	casted = false
+
+	if not bTrackerDB.custom then
+		for k,v in pairs(spells) do
+			local name = GetSpellInfo(v)
+			if GetSpellCooldown(name) then
+				spell = name
+				break
+			end
+			spell = false
+		end
+	else
+		spell = bTrackerDB.custom
+	end
+
 	self:UnregisterEvent("PLAYER_ENTERING_WORLD")
-	self.PLAYER_ENTERING_WORLD = nil
 end
 
 function frame:MINIMAP_UPDATE_TRACKING()
 	self:makeTrackList()
-end
-
-function frame:UNIT_SPELLCAST_SUCCEEDED(self, unit, cast, ...)
-	spell = cast
-	casted = true
 end
 
 function frame:makeTrackList()
@@ -55,19 +73,22 @@ function frame:printTracks()
 			listName = listName .. ", "
 		end
 	end
-	print(listName)
+	Print(listName)
 end
 
 function frame:clearTracking()
 	self:trackHandler(nil,nil)
 end
+
 function frame:swapTracking() 
-	if casted == false or GetSpellCooldown(spell) == 0 then	
+	if spell and GetSpellCooldown(spell) == 0 then
 		if bTrackerDB.cur and bTrackerDB.pre then
 			self:trackHandler(bTrackerDB.pre, true, true)
 		else
-			print("Swap list not set, do one track cycle first")
+			Print("Swap list not set, do one track cycle first")
 		end
+	elseif spell == false then
+		Print("No spells where found to check for global cooldown, swap track has been disabled\n If you have a spell that you would like to track instead of the built in list add it with /btracker spellid")
 	end
 end
 
@@ -89,10 +110,10 @@ function frame:trackHandler(toTrack, swapTrack, silentTrack)
 		end
 	end
 	if trackThis and trackThis ~= 0 then
-		if not silentTrack then print("Tracking for: |cff33ff99" .. trackThis .. " . " .. list[trackThis].name) end
+		if not silentTrack then Print(string.format("Tracking for: |cff33ff99%s . %s", trackThis, list[trackThis].name)) end
 		SetTracking(trackThis)
 	else
-		print("Cleared tracking")
+		Print("Cleared tracking")
 		bTrackerDB.cur = nil
 		SetTracking(nil)
 	end
@@ -113,6 +134,27 @@ function frame:checkTracking(toTrack)
 	return track and track
 end
 
+SlashCmdList["BTRACKERC"] = function(arg1)
+	local trackID = tonumber(arg1)
+	if arg1 == "clear" then
+		bTrackerDB.custom = nil
+		return frame:PLAYER_ENTERING_WORLD()
+	elseif trackID then
+		spellCheck = GetSpellInfo(trackID)
+		if spellCheck then
+			bTrackerDB.custom = spellCheck
+			spell = spellCheck
+			Print(string.format("%s %s", "Custom spell to track global cooldown is:", spellCheck))
+		else
+			bTrackerDB.custom = nil
+			spell = false
+			Print(string.format("%s, %d", "Unable to get spellinfo on spellid:", trackID))
+		end
+	else
+		Print(string.format("invalid input: %s is not a number", arg1))
+	end
+end
+
 SlashCmdList["BTRACKER"] = function(arg1)
 	if arg1 == "" then
 		frame:printTracks()
@@ -120,5 +162,6 @@ SlashCmdList["BTRACKER"] = function(arg1)
 		frame:trackHandler(arg1, false, false)
 	end
 end
+SLASH_BTRACKERC1 = "/btracker"
 SLASH_BTRACKER1 = "/track"
 SLASH_BTRACKER2 = "/tr"
