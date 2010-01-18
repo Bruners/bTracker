@@ -1,7 +1,7 @@
 ﻿## Interface: 30300
 ## Title: |cFF37FDFCb|rTracker
 ## Author: Bruners
-## Version: v1.7.2
+## Version: v1.7.3
 ## X-eMail: bruners@gmail.com
 ## SavedVariables: bTrackerDB
 ## Notes: Lets you set tracking with slash commands and swap between two trackings with a key binding
