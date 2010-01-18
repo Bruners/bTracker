@@ -88,7 +88,7 @@ function frame:swapTracking()
 			Print("Swap list not set, do one track cycle first")
 		end
 	elseif spell == false then
-		Print("No spells where found to check for global cooldown, swap track has been disabled\n If you have a spell that you would like to track instead of the built in list add it with /btracker spellid")
+		Print("No spells where found to check for global cooldown, swap track has been disabled\n If you have a spell that you would like to check instead of the built in list,\nAdd it with /btracker spellID")
 	end
 end
 
@@ -137,6 +137,8 @@ end
 SlashCmdList["BTRACKERC"] = function(arg1)
 	local trackID = tonumber(arg1)
 	if arg1 == "clear" then
+		local dbSpell = select(2,GetSpellLink(bTrackerDB.custom))
+		Print(string.format("%s %s", "Going back to predefined spell list for GCD checking, removed spell", dbSpell and dbSpell or ""))
 		bTrackerDB.custom = nil
 		return frame:PLAYER_ENTERING_WORLD()
 	elseif trackID then
@@ -144,14 +146,14 @@ SlashCmdList["BTRACKERC"] = function(arg1)
 		if spellCheck then
 			bTrackerDB.custom = spellCheck
 			spell = spellCheck
-			Print(string.format("%s %s", "Custom spell to track global cooldown is:", spellCheck))
+			Print(string.format("%s %s", "Custom spell to check for GCD is:", spellCheck))
 		else
 			bTrackerDB.custom = nil
 			spell = false
-			Print(string.format("%s, %d", "Unable to get spellinfo on spellid:", trackID))
+			Print(string.format("%s, %d", "Unable to get spellinfo on spellID:", trackID))
 		end
 	else
-		Print(string.format("invalid input: %s is not a number", arg1))
+		Print(string.format("Invalid input: %s is not a number", arg1))
 	end
 end
 
